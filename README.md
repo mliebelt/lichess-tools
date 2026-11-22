@@ -10,3 +10,9 @@ This repository tries the following:
   * All tools have one command (from the command line to be used) that have a command line interface.
   * That interface displays a help information, if asked for (option `--help`).
   * All possibilities are available through command line options then.
+
+## How to do it
+
+* I want to do all development with the help of LLMs.
+* The tools will mainly consist in python scripts and bash/shell scripts as wrapper (if helpful).
+* All ideas will be first developed as Github tickets, and given as they are to the LLM then.
