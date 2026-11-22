@@ -15,6 +15,7 @@ When using the Lichess API, there will be from time to time the necessity to hav
   * get an meaningful error message in all cases.
   * get some additional information to then define the missing `LICHESS_PAT` by the user. There is some documentation available about it here: https://github.com/lichess-org/api-demo/tree/master/example/oauth-personal-token
 * Get all information about Lichess API only from the authorative resource: https://lichess.org/api Don't search anywhere else for information about the Lichess API.
+* The API facts used by the tools are collected in `lichess-apis.md` (copied from that resource, one section per endpoint). Read the endpoint there first; new endpoints are added there before they are used.
 
 ## Flow of Control
 
