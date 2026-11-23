@@ -1,0 +1,32 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    # The secret LICHESS_PAT is stored in the GitHub environment "test". Environment
+    # secrets are only visible to jobs that name the environment.
+    environment: test
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.9", "3.13"]
+    env:
+      PYTHONUTF8: "1"
+      # If the secret is missing (or not available, e.g. pull requests from forks)
+      # the value is empty and the live tests skip themselves.
+      LICHESS_PAT: ${{ secrets.LICHESS_PAT }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Run unit and (if a token is available) live tests
+        run: python -m unittest discover -s tests -v

@@ -7,8 +7,8 @@ Last updated: 2026-11-22. Notes to continue the work on the next day.
 * Repository is connected to GitHub (`origin`, branch `main`, tracking is set up).
 * Ticket #1 (save studies): `studydl.py` is implemented and the unit tests pass (`python -m unittest discover -s tests`).
   The live tests (`tests/test_studydl_live.py`) are skipped without `LICHESS_PAT`. They were **not run yet**.
-* **Nothing is committed yet.** Changed or new: `Claude.md`, `README.md`, `lichess-apis.md`, `plans/`, `studydl.py`,
-  `tests/`, `TODO.md`.
+* Committed and pushed (`7689cd5`); `studies/` is in `.gitignore`.
+* CI workflow drafted in `.github/workflows/test.yml` (2026-11-23), **not committed yet**.
 * Plan and decisions: [plans/1-save-studies.md](plans/1-save-studies.md). API facts: [lichess-apis.md](lichess-apis.md).
 
 ## Findings of the topic experiment (why there is no `--topic`)
