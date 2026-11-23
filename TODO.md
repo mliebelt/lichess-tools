@@ -11,8 +11,10 @@ Last updated: 2026-11-23.
 * Plans: [plans/1-save-studies.md](plans/1-save-studies.md). API facts: [lichess-apis.md](lichess-apis.md).
 * Ticket #2 (filter studies by additional parameters): https://github.com/mliebelt/lichess-tools/issues/2.
   No plan for the tool part yet. Ideas for a Lichess feature: [plans/2-study-topic-api.md](plans/2-study-topic-api.md)
-  (research of the `lila` source, API ideas, steps). Draft text for a feature request:
-  [plans/2-support-member-search.md](plans/2-support-member-search.md) (not posted yet).
+  (research of the `lila` source, API ideas, steps).
+* Member search request is **posted** (2026-11-23): https://github.com/lichess-org/lila/issues/22625
+  "API: list the studies I contribute to (studies where I am a member)", open, no comments yet. The draft text is kept in
+  [plans/2-support-member-search.md](plans/2-support-member-search.md) (the posted issue has extra explanations).
 
 ## Findings
 
@@ -38,6 +40,7 @@ member of many private studies of A and of others:
   the call without token gave 17. So the list only contains the **public** studies; being a member of a non-public study
   does not add it, even though the docs say "If authenticated, then all public, unlisted, and private studies are included".
 * Not tested: `GET /api/study/by/A` with a token of B (B is a member of private studies of A). Expected: only public ones.
+* Requested at Lichess: https://github.com/lichess-org/lila/issues/22625 (open).
 * The Lichess web page does it: "Studies I contribute to" = `GET https://lichess.org/study/search?q=member:<user>&order=hot`
   (`&page=2` for more). The answer is **HTML** (no JSON), rendered for the logged-in session (cookie, not a token). Each card has the
   study id, name, private flag, likes, owner, update time, the first chapters and the member list, but no topics.
@@ -57,12 +60,16 @@ member of many private studies of A and of others:
 1. [x] Ticket #1 finished, CI set up (see above).
 2. [x] Plan file naming rule changed in `Claude.md` to `plans/<NR>-<meaningful-title>.md`.
 3. [x] Split ticket #1: the topic filter and more are now in ticket #2.
-4. [ ] Review the draft feature request [plans/2-support-member-search.md](plans/2-support-member-search.md), decide where
-       to post it (comment on lila #17480 and/or new issue in `lichess-org/lila`), and post it as a user.
-5. [ ] Plan for ticket #2 in `plans/2-filter-studies.md` (in plan mode first): "created since" and "changed since",
+4. [x] Member search feature request posted as lila #22625 (from the draft in
+       [plans/2-support-member-search.md](plans/2-support-member-search.md)).
+5. [ ] Watch lila #22625 for answers (maintainers may prefer another shape), and react.
+6. [ ] Topics (**start of the next session**): [plans/2-study-topic-api.md](plans/2-study-topic-api.md) is reviewed and
+       approved by the owner. Decide how to go on with the existing issue lila #17480 (for example a comment that asks which shape the maintainers prefer; smallest step: topics in the
+       study list and a read endpoint). The comment text is not written yet.
+7. [ ] Plan for ticket #2 in `plans/2-filter-studies.md` (in plan mode first): "created since" and "changed since",
        possibly `--id`. Contributor type and topics stay blocked on Lichess.
-6. [ ] Optional: look at the Lichess server code (Scala, repo `lila`) to implement the request as a pull request.
-7. [ ] Tokens: the token for the tools has more scopes than `study:read`. This is accepted for now (later features will
+8. [ ] Optional: look at the Lichess server code (Scala, repo `lila`) to implement the request as a pull request.
+9. [ ] Tokens: the token for the tools has more scopes than `study:read`. This is accepted for now (later features will
        need broader scopes).
 
 ## Ideas for later (no tickets yet)

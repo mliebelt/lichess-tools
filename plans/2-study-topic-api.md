@@ -2,7 +2,8 @@
 
 Collection of ideas, research and open questions. Nothing here is decided. Related files:
 
-* [2-support-member-search.md](2-support-member-search.md): draft text of a feature request (member studies, topics in the list).
+* [2-support-member-search.md](2-support-member-search.md): draft text of a separate feature request, only about listing the
+  studies a user is a member of (no topics).
 * Upstream issue: https://github.com/lichess-org/lila/issues/17480 "API: a study topic API" (open since 2025-05-06,
   label `study`). Wish there: (1) ask with a list of study ids and receive the topics of each, (2) set or clear a topic of
   a list of studies by ids. Idea behind it: "a folder structure UI could be built for studies".
@@ -60,7 +61,7 @@ Scopes: `study:read` for reading, `study:write` for changing. Lichess API style 
    owner, and a query parameter `topic` to filter.
 5. **Bulk for a list of ids (wish of #17480):** `POST /api/study/topics` with a list of ids (read), and a bulk write.
    Probably a later step, because it needs rate limits and a decision about partial failures.
-6. **Member listing:** see [2-support-member-search.md](2-support-member-search.md).
+6. **Member listing:** a separate request, see [2-support-member-search.md](2-support-member-search.md).
 7. **PGN export:** an extra tag with the topics in `GET /api/study/{id}.pgn`. Probably the least wanted, because tags are
    per chapter.
 
@@ -83,8 +84,8 @@ Open design questions:
 
 1. [ ] Read the contribution rules of `lila` (`CONTRIBUTING.md`, development setup) before writing code.
 2. [ ] Comment on lila #17480 with the proposal, ask the maintainers which shape they prefer (smallest step: topics in the
-       list and a read endpoint), and say if you would write the pull request. Draft text:
-       [2-support-member-search.md](2-support-member-search.md) (to be adapted).
+       list and a read endpoint), and say if you would write the pull request. The comment text is not written yet
+       (the draft in [2-support-member-search.md](2-support-member-search.md) is only about member search).
 3. [ ] If they agree: set up a local `lila` (Scala 3 / Play), implement the smallest step, add the endpoint to
        the OpenAPI documentation (repo `lichess-org/api`), pull request.
 4. [ ] Afterwards: use it in `studydl.py` (`--topic`), and copy the new endpoint into `lichess-apis.md` first, as the
