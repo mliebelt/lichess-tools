@@ -19,7 +19,7 @@ This repository tries the following:
 
 ## Tools
 
-All tools need Python 3.8 or newer and nothing else. They work the same on Linux, Mac and Windows.
+All tools need Python 3.10 or newer (the versions tested in CI) and nothing else. They work the same on Linux, Mac and Windows.
 
 ### studydl.py – save your studies
 

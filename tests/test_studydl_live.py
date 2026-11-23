@@ -4,6 +4,8 @@ They are skipped unless the environment variable LICHESS_PAT contains a token
 with the scope 'study:read'.
 """
 
+import contextlib
+import io
 import os
 import sys
 import tempfile
@@ -32,11 +34,13 @@ class LiveTest(unittest.TestCase):
         if not studies:
             self.skipTest("the account has no studies")
         with tempfile.TemporaryDirectory() as tmp:
-            code = studydl.main(
-                ["--out", tmp, "--user", username, "--interactive"],
-                input_fn=lambda prompt: "1",
-                environ={"LICHESS_PAT": TOKEN},
-            )
+            # Silence the output: the list of study titles must not end up in CI logs.
+            with contextlib.redirect_stdout(io.StringIO()):
+                code = studydl.main(
+                    ["--out", tmp, "--user", username, "--interactive"],
+                    input_fn=lambda prompt: "1",
+                    environ={"LICHESS_PAT": TOKEN},
+                )
             self.assertEqual(code, studydl.EXIT_OK)
             files = list(Path(tmp).glob("*.pgn"))
             self.assertEqual(len(files), 1)

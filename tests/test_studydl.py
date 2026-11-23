@@ -125,7 +125,8 @@ class HttpErrorTest(unittest.TestCase):
         self.assertIn("500", studydl.describe_http_error(500, "/p"))
 
     def _http_error(self, code):
-        err = urllib.error.HTTPError("https://lichess.org/p", code, "msg", {}, None)
+        # An empty body (not None) so that close() works on all Python versions.
+        err = urllib.error.HTTPError("https://lichess.org/p", code, "msg", {}, io.BytesIO())
         self.addCleanup(err.close)
         return err
 
