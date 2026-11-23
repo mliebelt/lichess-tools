@@ -1,51 +1,71 @@
 # TODO / Notes
 
-Last updated: 2026-11-22. Notes to continue the work on the next day.
+Last updated: 2026-11-23.
 
 ## State of the work
 
 * Repository is connected to GitHub (`origin`, branch `main`, tracking is set up).
-* Ticket #1 (save studies): `studydl.py` is implemented and the unit tests pass (`python -m unittest discover -s tests`).
-  The live tests (`tests/test_studydl_live.py`) are skipped without `LICHESS_PAT`. They were **not run yet**.
-* Committed and pushed (`7689cd5`); `studies/` is in `.gitignore`.
-* CI workflow drafted in `.github/workflows/test.yml` (2026-11-23), **not committed yet**.
-* Plan and decisions: [plans/1-save-studies.md](plans/1-save-studies.md). API facts: [lichess-apis.md](lichess-apis.md).
+* Ticket #1 (save studies) is done: `studydl.py` with unit tests and live tests, CI runs on Linux, Windows and Mac
+  (Python 3.10 and 3.13) and is green. The `LICHESS_PAT` secret lives in the GitHub environment `test`.
+* `studies/` (default output folder of `studydl.py`) is in `.gitignore`.
+* Plans: [plans/1-save-studies.md](plans/1-save-studies.md). API facts: [lichess-apis.md](lichess-apis.md).
+* Ticket #2 (filter studies by additional parameters): https://github.com/mliebelt/lichess-tools/issues/2.
+  No plan written yet. The draft text for a feature request to Lichess is in
+  [plans/2-support-member-search.md](plans/2-support-member-search.md) (not posted yet).
 
-## Findings of the topic experiment (why there is no `--topic`)
+## Findings
 
-* Checked with `curl` for the study `GFzdt4yP`: neither the headers (`HEAD`/`GET /api/study/{id}.pgn`) nor the PGN tags
-  nor the study list (`GET /api/study/by/{username}`: only `id`, `name`, `createdAt`, `updatedAt`) contain the topics.
+### Topics (ticket #2, option "Topics") – not possible with the documented API
+
+* Checked with `curl` for one study: neither the headers (`HEAD`/`GET /api/study/{id}.pgn`) nor the PGN tags nor the
+  study list (`GET /api/study/by/{username}`: only `id`, `name`, `createdAt`, `updatedAt`) contain the topics.
 * The word "Mannschaft" only appeared in chapter `Event` tags and comments, which is not the topic.
-* The official API docs have no endpoint for topics (searched for "topic" / "theme"). Looks like a missing feature.
-* Related upstream issue (overlapping, but no topics in the metadata): https://github.com/lichess-org/api/issues/157
-* Useful for later: `Last-Modified` header (for an `--update` option that skips unchanged studies); the PGN download also
-  works for studies of other users.
+* The official API docs have no endpoint for topics (searched for "topic" / "theme").
+* Existing upstream issue: https://github.com/lichess-org/lila/issues/17480 "API: a study topic API" (open since
+  2025-05-06, label `study`): read the topics of studies by id, and set or clear them. In that issue a commenter said it
+  should be opened on the API repo, and the author answered that the API repo is only for documentation, not code.
+  So feature requests for the API probably belong to the `lila` repository.
+* https://github.com/lichess-org/api/issues/157 ("API for Studies") is **not** related: it asks for creating studies and
+  importing PGN into them.
+
+### Type "studies I contribute to" (ticket #2, option 1) – not possible with the documented API
+
+Experiment (2026-11-23), user A = owner account (with the token in `LICHESS_PAT`), user B = my own account, who is a
+member of many private studies of A and of others:
+
+* `GET /api/study/by/B` with A's token gave 18 studies, without any token also 18. After deleting one **public** study of B
+  the call without token gave 17. So the list only contains the **public** studies; being a member of a non-public study
+  does not add it, even though the docs say "If authenticated, then all public, unlisted, and private studies are included".
+* Not tested: `GET /api/study/by/A` with a token of B (B is a member of private studies of A). Expected: only public ones.
+* The Lichess web page does it: "Studies I contribute to" = `GET https://lichess.org/study/search?q=member:<user>&order=hot`
+  (`&page=2` for more). The answer is **HTML** (no JSON), rendered for the logged-in session (cookie, not a token). Each card has the
+  study id, name, private flag, likes, owner, update time, the first chapters and the member list, but no topics.
+  This is not an API, so per `Claude.md` we do not use it.
+* The PGN download works for studies of other owners as well (private ones when the token's user is a member). That allows a
+  workaround for later: `--id <studyId>` to save specific studies that the user picked in the web UI (not tested yet with
+  a private study of another owner).
+
+### Other
+
+* Useful for later: `Last-Modified` header (for an `--update` option that skips unchanged studies).
+* Created since / Changed since (ticket #2, options 3 and 4) are doable with `createdAt` / `updatedAt` of the study list.
+  Open points: format (`yyyy-mm-dd`, `yyyy-mm-dd-hh-mm`), time zone (suggestion: UTC).
 
 ## Next steps
 
-1. [ ] Try the tool with a real token: `python studydl.py --dry-run`, then `python studydl.py -i --out /tmp/studies`.
-   * A `studies/` folder (default output of `studydl.py`) now exists in the repo. It may hold private studies: add
-     `studies/` to `.gitignore` **before** the first commit, and do not `git add` it.
-2. [ ] Run all tests including the live ones: `LICHESS_PAT=... python -m unittest discover -s tests`.
-3. [ ] Use a separate token with **only** the scope `study:read` for the tools (the current one has many more scopes).
-4. [ ] Split ticket #1 (by the owner): move the topic filter into a new ticket, "blocked: Lichess does not expose topics".
-       Update the text of #1 (v1 = own studies, list, interactive, dry-run, no topics). The type "studies I contribute to"
-       is also not in v1.
-5. [ ] Decide: `Claude.md` says plans are named `plans/ticket-<NR>.md`, the file is `plans/1-save-studies.md`.
-       Change the rule or rename the file.
-6. [ ] Commit (project commit conventions) and push: `git push`. Suggestion: one commit for docs and API reference, one
-       for the tool and the tests.
-7. [ ] Set up GitHub CI (postponed on purpose, only now):
-   * `.github/workflows/test.yml` on push and pull request, matrix ubuntu / windows / macos, run
-     `python -m unittest discover -s tests`.
-   * GitHub repo → Settings → Secrets and variables → Actions → new secret `LICHESS_PAT` (token with `study:read` only).
-     Pass it in the workflow as `env: LICHESS_PAT: ${{ secrets.LICHESS_PAT }}`. Secrets are not available to pull
-     requests from forks, the live tests skip themselves then.
-8. [ ] Optional: raise a feature request at Lichess ("add `topics` to the studies list metadata", see issue 157 above), or
-       look at the server code (Scala, repo `lila`) to implement it. Check the existing issues for duplicates first.
+1. [x] Ticket #1 finished, CI set up (see above).
+2. [x] Plan file naming rule changed in `Claude.md` to `plans/<NR>-<meaningful-title>.md`.
+3. [x] Split ticket #1: the topic filter and more are now in ticket #2.
+4. [ ] Review the draft feature request [plans/2-support-member-search.md](plans/2-support-member-search.md), decide where
+       to post it (comment on lila #17480 and/or new issue in `lichess-org/lila`), and post it as a user.
+5. [ ] Plan for ticket #2 in `plans/2-filter-studies.md` (in plan mode first): "created since" and "changed since",
+       possibly `--id`. Contributor type and topics stay blocked on Lichess.
+6. [ ] Optional: look at the Lichess server code (Scala, repo `lila`) to implement the request as a pull request.
+7. [ ] Tokens: the token for the tools has more scopes than `study:read`. This is accepted for now (later features will
+       need broader scopes).
 
 ## Ideas for later (no tickets yet)
 
-* Type "studies I contribute to" (needs a documented way to list them).
-* Topic filter (needs topics in the API, see above).
+* Type "studies I contribute to" and topic filter: blocked on Lichess (see findings).
 * `--update`: download only studies changed since the local file (`Last-Modified`).
+* `--id`: save studies by id (works for studies of other owners that the token can see).
