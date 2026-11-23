@@ -10,7 +10,8 @@ Last updated: 2026-11-23.
 * `studies/` (default output folder of `studydl.py`) is in `.gitignore`.
 * Plans: [plans/1-save-studies.md](plans/1-save-studies.md). API facts: [lichess-apis.md](lichess-apis.md).
 * Ticket #2 (filter studies by additional parameters): https://github.com/mliebelt/lichess-tools/issues/2.
-  No plan written yet. The draft text for a feature request to Lichess is in
+  No plan for the tool part yet. Ideas for a Lichess feature: [plans/2-study-topic-api.md](plans/2-study-topic-api.md)
+  (research of the `lila` source, API ideas, steps). Draft text for a feature request:
   [plans/2-support-member-search.md](plans/2-support-member-search.md) (not posted yet).
 
 ## Findings
