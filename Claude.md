@@ -20,7 +20,7 @@ When using the Lichess API, there will be from time to time the necessity to hav
 ## Flow of Control
 
 * Work on ideas that are saved in Github tickets on a 1 by 1 case only.
-* Create for each ticket in the folder plans a new file named `ticket-<NR>.md` where we collect how we want to develop the ticket then.
+* Create for each ticket in the folder plans a new file named `<NR>-<meaningful-title>.md` where we collect how we want to develop the ticket then.
 * We will work together on those files.
 * When we agree on the plan, then the implementation starts done by an LLM.
 * For each new feature, we want to create fitting unit tests (run locally without network access necessary, if possible) and feature tests that use the centrally available `LICHESS_PAT` of the user to test some functionality when running a build system.
