@@ -30,6 +30,8 @@ python studydl.py --dry-run                         # show what would be saved
 python studydl.py                                   # save all own studies into ./studies
 python studydl.py --interactive --out ~/chess       # choose from a numbered list (1,3,5-7 / all / q)
 python studydl.py --user SomeUser                   # studies of another user (public ones only)
+python studydl.py --created-since 2026-01-01        # only studies created on that day (UTC) or later
+python studydl.py --changed-since 2026-11-01 -n     # only studies changed since then (UTC), show only
 python studydl.py --help                            # all options with examples
 ```
 
