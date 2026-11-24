@@ -1,6 +1,6 @@
 # TODO / Notes
 
-Last updated: 2026-11-23.
+Last updated: 2026-11-24.
 
 ## State of the work
 
@@ -71,6 +71,14 @@ member of many private studies of A and of others:
 8. [ ] Optional: look at the Lichess server code (Scala, repo `lila`) to implement the request as a pull request.
 9. [ ] Tokens: the token for the tools has more scopes than `study:read`. This is accepted for now (later features will
        need broader scopes).
+10. [ ] Bugs found in a code review of `studydl.py` and the tests (each verified against the code): the network exception
+       `IncompleteRead` is not caught (traceback, remaining studies never tried), the write is not atomic (a partial file is
+       skipped by later runs), `--dry-run` says "Would save" for files that exist, the filename limit counts characters, not
+       bytes, wrong record types in the study list give a traceback, `~` in `--out` is not expanded, NDJSON is split at
+       Unicode line separators, `errors="replace"` turns non-ASCII names into `?` on Windows consoles, dead code at the
+       end of `api_get`. Make GitHub tickets (one by one) from this list.
+11. [ ] Decide whether to rename `Claude.md` to `CLAUDE.md`: Claude Code loads only `CLAUDE.md` automatically (on Linux the
+       name is case-sensitive), so today the rules have to be read explicitly.
 
 ## Ideas for later (no tickets yet)
 
