@@ -156,4 +156,6 @@ Invalid input needs no live test — argparse rejects it before any network call
 
 ## Status (2026-11-24)
 
-Plan approved by the owner (UTC, `yyyy-mm-dd` only, inclusive boundary), implementation not started.
+Plan approved by the owner (UTC, `yyyy-mm-dd` only, inclusive boundary). Implemented 2026-11-24 as specified
+here; open question 1 (showing the creation date in the numbered list) got no decision, so `format_study_line`
+stayed unchanged.

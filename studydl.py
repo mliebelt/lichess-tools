@@ -47,6 +47,12 @@ examples:
   Overwrite files that already exist:
     studydl.py --overwrite
 
+  Only the studies created since the year 2026 (UTC):
+    studydl.py --created-since 2026-01-01
+
+  Only the studies that changed since 2026-11-01, without saving anything:
+    studydl.py --changed-since 2026-11-01 --dry-run
+
 interactive mode:
   A numbered list is shown. Answer with numbers and ranges (1,3,5-7),
   'all' for every study, or 'q' to quit without saving.
@@ -210,6 +216,49 @@ def format_study_line(number, width, study):
     )
 
 
+_SINCE_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+def parse_since_date(text):
+    """Parse a yyyy-mm-dd filter date, meaning 00:00:00 UTC of that day.
+
+    Returns epoch milliseconds (the type the argparse options use). A wrong
+    value raises argparse.ArgumentTypeError, which argparse reports as a
+    usage error (exit code 2).
+    """
+    if _SINCE_DATE.match(text):
+        try:
+            moment = datetime.strptime(text, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        except ValueError:  # for example 2026-02-30
+            pass
+        else:
+            return int(moment.timestamp() * 1000)
+    raise argparse.ArgumentTypeError(
+        "expected a date as yyyy-mm-dd (for example 2026-11-24), got {!r}".format(text)
+    )
+
+
+def filter_studies(studies, created_since=None, changed_since=None):
+    """Keep the studies created at/after created_since and updated at/after
+    changed_since (epoch milliseconds UTC; a None condition is skipped).
+
+    The original order is kept. A study whose relevant field is missing or not
+    a number drops out (defensive; the API documents both fields as required).
+    """
+    result = []
+    for study in studies:
+        if created_since is not None and not _at_or_after(study.get("createdAt"), created_since):
+            continue
+        if changed_since is not None and not _at_or_after(study.get("updatedAt"), changed_since):
+            continue
+        result.append(study)
+    return result
+
+
+def _at_or_after(value, cutoff):
+    return isinstance(value, (int, float)) and value >= cutoff
+
+
 def parse_selection(text, count):
     """Parse the answer in interactive mode.
 
@@ -293,6 +342,19 @@ def build_parser():
         "(default: ./studies)",
     )
     parser.add_argument(
+        "--created-since",
+        metavar="DATE",
+        type=parse_since_date,
+        help="only studies created on this date or later (yyyy-mm-dd, UTC)",
+    )
+    parser.add_argument(
+        "--changed-since",
+        metavar="DATE",
+        type=parse_since_date,
+        help="only studies updated on this date or later, using the study list "
+        "field updatedAt (yyyy-mm-dd, UTC)",
+    )
+    parser.add_argument(
         "-i",
         "--interactive",
         action="store_true",
@@ -319,7 +381,16 @@ def run(args, token, get=api_get, input_fn=input, output=print):
     if not studies:
         output("No studies found for {}.".format(username))
         return EXIT_OK
-    output("Found {} studies of {}.".format(len(studies), username))
+    if args.created_since is not None or args.changed_since is not None:
+        total = len(studies)
+        studies = filter_studies(studies, args.created_since, args.changed_since)
+        if not studies:
+            output("No studies of {} match the since filter.".format(username))
+            return EXIT_OK
+        output("Found {} of {} studies of {} matching the since filter.".format(
+            len(studies), total, username))
+    else:
+        output("Found {} studies of {}.".format(len(studies), username))
 
     if args.interactive:
         studies = choose_interactively(studies, input_fn, output)

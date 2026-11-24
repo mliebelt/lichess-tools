@@ -10,7 +10,8 @@ Last updated: 2026-11-23.
 * `studies/` (default output folder of `studydl.py`) is in `.gitignore`.
 * Plans: [plans/1-save-studies.md](plans/1-save-studies.md). API facts: [lichess-apis.md](lichess-apis.md).
 * Ticket #2 (filter studies by additional parameters): https://github.com/mliebelt/lichess-tools/issues/2.
-  No plan for the tool part yet. Ideas for a Lichess feature: [plans/2-study-topic-api.md](plans/2-study-topic-api.md)
+  Plan and implementation of "created since" / "changed since": [plans/2-filter-studies.md](plans/2-filter-studies.md).
+  Ideas for a Lichess feature: [plans/2-study-topic-api.md](plans/2-study-topic-api.md)
   (research of the `lila` source, API ideas, steps).
 * Member search request is **posted** (2026-11-23): https://github.com/lichess-org/lila/issues/22625
   "API: list the studies I contribute to (studies where I am a member)", open, no comments yet. The draft text is kept in
@@ -66,8 +67,9 @@ member of many private studies of A and of others:
 6. [ ] Topics (**start of the next session**): [plans/2-study-topic-api.md](plans/2-study-topic-api.md) is reviewed and
        approved by the owner. Decide how to go on with the existing issue lila #17480 (for example a comment that asks which shape the maintainers prefer; smallest step: topics in the
        study list and a read endpoint). The comment text is not written yet.
-7. [ ] Plan for ticket #2 in `plans/2-filter-studies.md` (in plan mode first): "created since" and "changed since",
-       possibly `--id`. Contributor type and topics stay blocked on Lichess.
+7. [x] Plan for ticket #2 in `plans/2-filter-studies.md` (in plan mode first): "created since" and "changed since",
+       approved by the owner and implemented 2026-11-24: `--created-since` and `--changed-since` in `studydl.py`
+       with unit and live tests. `--id` not taken (stays "later"). Contributor type and topics stay blocked on Lichess.
 8. [ ] Optional: look at the Lichess server code (Scala, repo `lila`) to implement the request as a pull request.
 9. [ ] Tokens: the token for the tools has more scopes than `study:read`. This is accepted for now (later features will
        need broader scopes).

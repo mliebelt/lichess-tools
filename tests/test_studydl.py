@@ -1,5 +1,6 @@
 """Unit tests for studydl.py. They need no network access."""
 
+import argparse
 import contextlib
 import io
 import json
@@ -14,10 +15,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import studydl  # noqa: E402
 
+# The dates sit on different UTC days (2023-01-10 ... 2023-10-10, midnight), so
+# one yyyy-mm-dd cutoff on the command line can match only some of the studies.
 STUDIES = [
-    {"id": "aaaaaaaa", "name": "Openings: Sicilian", "createdAt": 1700000000000, "updatedAt": 1700000100000},
-    {"id": "bbbbbbbb", "name": "Endgames", "createdAt": 1700000000000, "updatedAt": 1700000200000},
-    {"id": "cccccccc", "name": "Tactics", "createdAt": 1700000000000, "updatedAt": 1700000300000},
+    {"id": "aaaaaaaa", "name": "Openings: Sicilian", "createdAt": 1673308800000, "updatedAt": 1686355200000},
+    {"id": "bbbbbbbb", "name": "Endgames", "createdAt": 1678406400000, "updatedAt": 1691625600000},
+    {"id": "cccccccc", "name": "Tactics", "createdAt": 1683676800000, "updatedAt": 1696896000000},
 ]
 NDJSON = "\n".join(json.dumps(s) for s in STUDIES) + "\n"
 
@@ -168,6 +171,71 @@ class HttpErrorTest(unittest.TestCase):
                 studydl.api_get("/p", "tok")
 
 
+class SinceDateTest(unittest.TestCase):
+    def test_exact_epoch_milliseconds(self):
+        self.assertEqual(studydl.parse_since_date("2026-11-24"), 1795478400000)
+
+    def test_wrong_values_rejected(self):
+        for text in ["", "2026-11", "2026-1-5", "2026-11-24-09-15", "2026-11-24T09:00",
+                     "24-11-2026", "2026-13-01", "2026-02-30", "today"]:
+            with self.subTest(text=text):
+                with self.assertRaises(argparse.ArgumentTypeError) as ctx:
+                    studydl.parse_since_date(text)
+                self.assertIn("yyyy-mm-dd", str(ctx.exception))
+
+
+class FilterStudiesTest(unittest.TestCase):
+    FIXTURE = [
+        {"id": "a", "createdAt": 1000, "updatedAt": 4000},
+        {"id": "b", "createdAt": 2000, "updatedAt": 3000},
+        {"id": "c", "createdAt": 3000, "updatedAt": 2000},
+        {"id": "d", "createdAt": 3000},
+    ]
+
+    def ids(self, studies):
+        return [study["id"] for study in studies]
+
+    def test_created_since_keeps_boundary_and_later(self):
+        kept = studydl.filter_studies(self.FIXTURE, created_since=2000)
+        self.assertEqual(self.ids(kept), ["b", "c", "d"])
+
+    def test_changed_since_keeps_boundary_and_later(self):
+        kept = studydl.filter_studies(self.FIXTURE, changed_since=3000)
+        self.assertEqual(self.ids(kept), ["a", "b"])
+
+    def test_both_options_are_and(self):
+        kept = studydl.filter_studies(self.FIXTURE, created_since=2000, changed_since=3000)
+        self.assertEqual(self.ids(kept), ["b"])
+
+    def test_no_option_returns_list_unchanged(self):
+        self.assertEqual(studydl.filter_studies(self.FIXTURE), self.FIXTURE)
+
+    def test_missing_updated_at_drops_out_of_changed_filter(self):
+        kept = studydl.filter_studies(self.FIXTURE, changed_since=0)
+        self.assertEqual(self.ids(kept), ["a", "b", "c"])
+
+    def test_non_numeric_field_drops_out(self):
+        kept = studydl.filter_studies([{"id": "x", "createdAt": "later"}], created_since=0)
+        self.assertEqual(self.ids(kept), [])
+
+
+class SinceDateParserTest(unittest.TestCase):
+    def test_option_stores_epoch_milliseconds(self):
+        args = parse(["--created-since", "2026-01-01"])
+        self.assertEqual(args.created_since, 1767225600000)
+        self.assertIsNone(args.changed_since)
+
+    def test_wrong_value_is_usage_error_naming_the_option(self):
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err), self.assertRaises(SystemExit) as ctx:
+            parse(["--created-since", "2026-13-99"])
+        self.assertEqual(ctx.exception.code, 2)
+        text = err.getvalue()
+        self.assertIn("yyyy-mm-dd", text)
+        self.assertIn("--created-since", text)
+        self.assertIn("2026-13-99", text)
+
+
 class RunTest(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -237,6 +305,38 @@ class RunTest(unittest.TestCase):
         self.assertEqual(code, studydl.EXIT_FAILED)
         self.assertEqual(len(self.files()), 2)
 
+    def test_created_since_saves_only_the_matches(self):
+        code, api = self.run_tool(["--created-since", "2023-05-10"])
+        self.assertEqual(code, studydl.EXIT_OK)
+        self.assertEqual(self.files(), [studydl.study_filename(STUDIES[2])])
+        self.assertEqual([c for c in api.calls if c.endswith(".pgn")], ["/api/study/cccccccc.pgn"])
+        self.assertTrue(any("Found 1 of 3 studies of Me" in line for line in self.lines))
+
+    def test_changed_since_saves_only_the_newer(self):
+        code, _ = self.run_tool(["--changed-since", "2023-08-10"])
+        self.assertEqual(code, studydl.EXIT_OK)
+        self.assertEqual(
+            self.files(),
+            sorted([studydl.study_filename(STUDIES[1]), studydl.study_filename(STUDIES[2])]),
+        )
+
+    def test_future_date_exits_ok_and_downloads_nothing(self):
+        code, api = self.run_tool(["--created-since", "2099-01-01"])
+        self.assertEqual(code, studydl.EXIT_OK)
+        self.assertEqual(self.files(), [])
+        self.assertFalse([c for c in api.calls if c.endswith(".pgn")])
+        self.assertTrue(any("match the since filter" in line for line in self.lines))
+
+    def test_dry_run_with_filter_lists_only_the_matches(self):
+        code, api = self.run_tool(["--dry-run", "--created-since", "2023-03-10"])
+        self.assertEqual(code, studydl.EXIT_OK)
+        self.assertFalse(self.out.exists())
+        self.assertFalse([c for c in api.calls if c.endswith(".pgn")])
+        would = [line for line in self.lines if "Would save" in line]
+        self.assertEqual(len(would), 2)
+        self.assertTrue(any("bbbbbbbb" in line for line in would))
+        self.assertTrue(any("cccccccc" in line for line in would))
+
     def test_no_studies(self):
         def get(path, token):
             return b""
@@ -278,7 +378,8 @@ class MainTest(unittest.TestCase):
                 self.assertEqual(ctx.exception.code, 0)
                 text = out.getvalue()
                 for expected in ("--user", "--out", "--interactive", "--dry-run",
-                                 "--overwrite", "examples:", "LICHESS_PAT", "study:read"):
+                                 "--overwrite", "--created-since", "--changed-since",
+                                 "examples:", "LICHESS_PAT", "study:read"):
                     self.assertIn(expected, text)
 
     def test_unknown_option_is_a_usage_error(self):
