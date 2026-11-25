@@ -119,10 +119,14 @@ server (not needed for `compile`). **Next session: start at step 5** (implement 
    The edge case "user with only own studies" returns HTTP 200 with zero lines — correct.
    **Not committed in the lila clone yet** — after the re-test of step 6, commit on `study-member-api` with a message
    like "Add GET /api/study/member (lichess-org/lila#22625)".
-6. [ ] Manual test on the local server: two users, a private study where user B is member of a study of user A, PAT from
-       `/account/token`, `curl -H "Authorization: Bearer ..." http://127.0.0.1:9663/api/study/member` as B (must see the
-       study) and check the answer without a token is 401.
-7. [ ] Pull request `mliebelt/lila:study-member-api` to `lichess-org/lila`, referencing lila #22625.
+6. [x] Manual test on the local server passed (2026-11-25), done with `experiments/lila-api.sh` + local tokens from
+       `/account/token`: no token → **401 Missing authorization header**; A's token → only A's **foreign** studies (owned
+       excluded); `study/by/<user>` contrast verified for public vs unlisted; the website tabs match our result sets
+       exactly. Proof material: terminal transcripts + two screenshots of the tabs (owner session 2026-11-25).
+7. [ ] Pull request `mliebelt/lila:study-member-api` to `lichess-org/lila`, referencing lila #22625. **Waiting for the
+       owner's ok to push** (single commit `cc5411177b`, "GET /api/study/member for the studies the user contributes
+       to"). Not yet decided: whether the PR text @-mentions ornicar and whether the screenshots go in (they show the
+       local test user names).
 8. [ ] Documentation PR in `lichess-org/api` (the OpenAPI description) once the endpoint is settled.
 
 ### Afterwards in our tools
