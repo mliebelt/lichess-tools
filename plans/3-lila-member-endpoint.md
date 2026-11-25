@@ -77,9 +77,11 @@ mongod and redis were missing.
        Note for all later sessions: build commands need `. ~/.zprofile &&` first (see step 1). Git in the clone is
        fully normal now (git-lfs installed, see step 2).
 
-Environment summary at the end of the setup session (2026-11-25): **compile is green**, services are up via
-`~/priv/dev/lila-dev-services/start`, the branch `study-member-api` is checked out and untouched. Ready for
-implementation (steps 5 to 8).
+Environment summary at the end of the setup session (2026-11-25): **compile is green**, the branch `study-member-api`
+is checked out and untouched, everything above is verified. The docker services were **stopped** at session end
+(`~/priv/dev/lila-dev-services/stop`) — start them again with `~/priv/dev/lila-dev-services/start` before running the
+server (not needed for `compile`). **Next session: start at step 5** (implement the endpoint), remembering
+`. ~/.zprofile &&` before build commands and `corepack pnpm` for pnpm.
 
 ### Implementation (next sessions)
 
