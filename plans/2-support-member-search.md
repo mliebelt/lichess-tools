@@ -3,6 +3,12 @@
 **Posted on 2026-11-23 as https://github.com/lichess-org/lila/issues/22625** (the posted issue has additional explanations; this
 file is the original draft and stays as a record).
 
+**Decision (2026-11-25):** the maintainer `ornicar` answered
+[issuecomment-7159995161](https://github.com/lichess-org/lila/issues/22625#issuecomment-7159995161) that he will go with
+the second proposal: **a new endpoint for the authenticated user, `GET /api/study/member`** (mirrors "Studies I contribute
+to"). We write the pull request ourselves; the work is tracked in ticket #3 and
+[3-lila-member-endpoint.md](3-lila-member-endpoint.md). The text below stays unchanged as a record of the request.
+
 > **Notes for the author (removed before posting):**
 >
 > * This request is only about **listing the studies a user is a member of**. Topics are a different topic and are already

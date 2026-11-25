@@ -1,6 +1,6 @@
 # TODO / Notes
 
-Last updated: 2026-11-24.
+Last updated: 2026-11-25.
 
 ## State of the work
 
@@ -13,9 +13,11 @@ Last updated: 2026-11-24.
   Plan and implementation of "created since" / "changed since": [plans/2-filter-studies.md](plans/2-filter-studies.md).
   Ideas for a Lichess feature: [plans/2-study-topic-api.md](plans/2-study-topic-api.md)
   (research of the `lila` source, API ideas, steps).
-* Member search request is **posted** (2026-11-23): https://github.com/lichess-org/lila/issues/22625
-  "API: list the studies I contribute to (studies where I am a member)", open, no comments yet. The draft text is kept in
-  [plans/2-support-member-search.md](plans/2-support-member-search.md) (the posted issue has extra explanations).
+* Member search request (https://github.com/lichess-org/lila/issues/22625) is **answered** (2026-11-25): `ornicar` will go
+  with `GET /api/study/member` for the authenticated user, and we write the pull request ourselves. Tracked as ticket #3,
+  plan: [plans/3-lila-member-endpoint.md](plans/3-lila-member-endpoint.md) (the work happens in the lila clone at
+  `~/priv/dev/lila`). The draft text of the request stays in
+  [plans/2-support-member-search.md](plans/2-support-member-search.md).
 
 ## Findings
 
@@ -41,7 +43,8 @@ member of many private studies of A and of others:
   the call without token gave 17. So the list only contains the **public** studies; being a member of a non-public study
   does not add it, even though the docs say "If authenticated, then all public, unlisted, and private studies are included".
 * Not tested: `GET /api/study/by/A` with a token of B (B is a member of private studies of A). Expected: only public ones.
-* Requested at Lichess: https://github.com/lichess-org/lila/issues/22625 (open).
+* Requested at Lichess: https://github.com/lichess-org/lila/issues/22625 — **answered 2026-11-25**: `ornicar` chose
+  `GET /api/study/member` for the authenticated user; we write the pull request (ticket #3).
 * The Lichess web page does it: "Studies I contribute to" = `GET https://lichess.org/study/search?q=member:<user>&order=hot`
   (`&page=2` for more). The answer is **HTML** (no JSON), rendered for the logged-in session (cookie, not a token). Each card has the
   study id, name, private flag, likes, owner, update time, the first chapters and the member list, but no topics.
@@ -63,14 +66,17 @@ member of many private studies of A and of others:
 3. [x] Split ticket #1: the topic filter and more are now in ticket #2.
 4. [x] Member search feature request posted as lila #22625 (from the draft in
        [plans/2-support-member-search.md](plans/2-support-member-search.md)).
-5. [ ] Watch lila #22625 for answers (maintainers may prefer another shape), and react.
+5. [x] Watch lila #22625 for answers, and react: answered 2026-11-25 by `ornicar`, shape chosen as `GET /api/study/member`
+       for the authenticated user; we announced to write the PR (ticket #3).
 6. [ ] Topics (**start of the next session**): [plans/2-study-topic-api.md](plans/2-study-topic-api.md) is reviewed and
        approved by the owner. Decide how to go on with the existing issue lila #17480 (for example a comment that asks which shape the maintainers prefer; smallest step: topics in the
        study list and a read endpoint). The comment text is not written yet.
 7. [x] Plan for ticket #2 in `plans/2-filter-studies.md` (in plan mode first): "created since" and "changed since",
        approved by the owner and implemented 2026-11-24: `--created-since` and `--changed-since` in `studydl.py`
        with unit and live tests. `--id` not taken (stays "later"). Contributor type and topics stay blocked on Lichess.
-8. [ ] Optional: look at the Lichess server code (Scala, repo `lila`) to implement the request as a pull request.
+8. [x] Look at the Lichess server code (Scala, repo `lila`) to implement the request as a pull request → started
+       2026-11-25 as ticket #3 ([plans/3-lila-member-endpoint.md](plans/3-lila-member-endpoint.md), clone at
+       `~/priv/dev/lila`).
 9. [ ] Tokens: the token for the tools has more scopes than `study:read`. This is accepted for now (later features will
        need broader scopes).
 10. [ ] Bugs found in a code review of `studydl.py` and the tests (each verified against the code): the network exception
@@ -84,6 +90,7 @@ member of many private studies of A and of others:
 
 ## Ideas for later (no tickets yet)
 
-* Type "studies I contribute to" and topic filter: blocked on Lichess (see findings).
+* Topic filter: still blocked on Lichess (see findings). Type "studies I contribute to": no longer blocked, upstream
+  endpoint agreed 2026-11-25 (ticket #3); `--member` waits until it is merged and deployed.
 * `--update`: download only studies changed since the local file (`Last-Modified`).
 * `--id`: save studies by id (works for studies of other owners that the token can see).
