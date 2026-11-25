@@ -123,10 +123,31 @@ server (not needed for `compile`). **Next session: start at step 5** (implement 
        `/account/token`: no token → **401 Missing authorization header**; A's token → only A's **foreign** studies (owned
        excluded); `study/by/<user>` contrast verified for public vs unlisted; the website tabs match our result sets
        exactly. Proof material: terminal transcripts + two screenshots of the tabs (owner session 2026-11-25).
-7. [ ] Pull request `mliebelt/lila:study-member-api` to `lichess-org/lila`, referencing lila #22625. **Waiting for the
-       owner's ok to push** (single commit `cc5411177b`, "GET /api/study/member for the studies the user contributes
-       to"). Not yet decided: whether the PR text @-mentions ornicar and whether the screenshots go in (they show the
-       local test user names).
+7. [ ] Pull request `mliebelt/lila:study-member-api` to `lichess-org/lila`, referencing lila #22625. **Owner decided
+       2026-11-25: do not push yet.** Decisions for when it goes out: **no @-mention** of ornicar, **text proof only**
+       (no screenshots). Single commit ready: `cc5411177b` "GET /api/study/member for the studies the user contributes
+       to". Commands then: `git -C ~/priv/dev/lila push origin study-member-api` and `gh pr create --repo
+       lichess-org/lila --head study-member-api ...` with the title = commit subject and this body:
+
+       > **What** — Adds `GET /api/study/member`, an authenticated endpoint listing the studies the token's user is a
+       > member of (excluding ones they own), streamed as NDJSON metadata exactly like `GET /api/study/by/{user}`
+       > (`id`, `name`, `createdAt`, `updatedAt`, optional `?topics=true`).
+       >
+       > **Why** — Feature request #22625: tools cannot find studies a user contributes to, because `study/by/{user}`
+       > only ever shows the owner's public studies. The shape is the one chosen in
+       > [#22625](https://github.com/lichess-org/lila/issues/22625#issuecomment-7159995161): a new endpoint for the
+       > authenticated user.
+       >
+       > **How** — Route + `Study.apiListMember` mirroring `apiListByOwner` (`Scoped(_.Study.Read)`,
+       > `apiC.jsonDownload`, throttle 50/s). One new repo method `sourceContributed` = existing `sourceByMember` +
+       > `ownerId != me` — the identical predicate the website's "Studies I contribute to" uses
+       > (`StudyPager.mineMember`), so the API and the tab agree by construction. 12 added lines.
+       >
+       > **Human testing** — local dev instance, several users, owned/member/public/unlisted constellations: no token →
+       > `401 Missing authorization header`;
+       > member token → foreign studies only, owned excluded; owner-only user → `200` with empty body; results equal
+       > the website tab "Studies I contribute to", cross-checked against `study/by/{user}` for public and unlisted
+       > visibility.
 8. [ ] Documentation PR in `lichess-org/api` (the OpenAPI description) once the endpoint is settled.
 
 ### Afterwards in our tools
