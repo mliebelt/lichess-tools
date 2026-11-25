@@ -70,8 +70,9 @@ mongod and redis were missing.
        `bin/mongodb/indexes.js` loaded into the `lichess` database (exit 0). lila `conf/base.conf` expects exactly
        `mongodb://127.0.0.1:27017` and `redis://127.0.0.1` — matches.
 4. [x] Done 2026-11-25: `./lila.sh compile` → **`[success] elapsed time: 98 s`**, 0 errors (the disk cache made it
-       fast; the wiki's `ui/build` step is stale — the UI now lives in the pnpm workspace and needs no extra step to
-       *compile*). `corepack pnpm install` → green in 3 s with the pinned pnpm 12.9.0. `./lila.sh scalafmtAll` → success
+       fast). `ui/build` does exist and is the UI asset build (a wrapper doing `pnpm install` in `ui/.build` and
+       bundling) — **not needed for `compile`**, but expected once before `run` to serve the web pages; not yet run.
+       (An earlier "the wiki is stale" note here was wrong: it came from the broken first checkout missing `ui/`.) `corepack pnpm install` → green in 3 s with the pinned pnpm 12.9.0. `./lila.sh scalafmtAll` → success
        in 7 s, 100% cache, **no file changed** (master is formatted per its own `.scalafmt.conf`; our future diff will
        contain only our changes).
        Note for all later sessions: build commands need `. ~/.zprofile &&` first (see step 1). Git in the clone is
