@@ -51,14 +51,38 @@ mongod and redis were missing.
 
 ### Setup (done in the first session, 2026-11-25)
 
-1. [ ] Toolchain, user-local without sudo: coursier to `~/.local/bin/cs`, `cs java --jvm temurin:21 --setup`, sbt via
-       coursier.
-2. [ ] Fork `lichess-org/lila` to `mliebelt/lila` (`gh repo fork`), `git clone --recursive` to `~/priv/dev/lila`
-       (recursive for the scalachess submodule), remotes `origin` (fork) and `upstream` (push disabled), branch
-       `study-member-api`, `pnpm add-hooks`.
-3. [ ] MongoDB 8 and Redis 7 via docker compose, kept **outside** the clone in `~/priv/dev/lila-dev-services/` with
-       `start`/`stop` helpers; load `bin/mongodb/indexes.js` into the `lichess` database.
-4. [ ] `ui/build`, then `./lila.sh compile` until green; `scalafmtAll` once.
+1. [x] Done 2026-11-25: coursier launcher at `~/.local/bin/cs`, then `cs setup --yes --jvm temurin:21 --apps sbt` →
+       Temurin **JDK 21.0.13.1** at `~/.cache/coursier/arc/.../jdk-21.0.13.1+2` and **sbt** at
+       `~/.local/share/coursier/bin/sbt`. cs setup wrote the PATH/JAVA_HOME exports to `~/.zprofile` (login shells only —
+       `~/.zshrc` does not source it and we did not change that). So **every build command must start with
+       `. ~/.zprofile &&`** (or open a login shell). `sbt --version` and `java -version` verified.
+2. [~] Fork: https://github.com/mliebelt/lila, clone at `~/priv/dev/lila` (no git submodules anymore on master).
+       Branch `study-member-api` from master (47948db658). **Still open** (declined in the first approval round, say the
+       word to redo): upstream remote `https://github.com/lichess-org/lila` with push disabled, and `pnpm add-hooks`
+       (only sets `core.hooksPath=bin/git-hooks`). lila pins `pnpm@12.9.0` (installed: 11.3.0) — run pnpm via
+       `corepack pnpm …`.
+       **git-lfs problem found:** lila keeps images in git-lfs; `git-lfs` is **not installed** on this machine although
+       `~/.gitconfig` still declares the lfs filters (leftover) — so plain `git status` in the clone exits 128. The
+       checkout was completed with a throwaway bypass (`-c filter.lfs.smudge=cat -c filter.lfs.clean=cat …`), the LFS
+       files are **pointer stubs**, which is fine for Scala/API work. Fix properly later: `sudo pacman -S git-lfs` in a
+       real terminal (an attempt inside the Claude session on 2026-11-25 failed — sudo cannot prompt there), then
+       `git lfs pull` if the real images are ever wanted. Until then, wrap git commands in the clone with
+       `-c filter.lfs.process= -c filter.lfs.required=false -c filter.lfs.smudge=cat -c filter.lfs.clean=cat`.
+3. [x] Done 2026-11-25: MongoDB 8 + Redis 7 up (containers `lila-dev-mongo`, `lila-dev-redis`, ports bound to
+       127.0.0.1 only), compose file + `start`/`stop` helpers in `~/priv/dev/lila-dev-services/`, indexes from
+       `bin/mongodb/indexes.js` loaded into the `lichess` database (exit 0). lila `conf/base.conf` expects exactly
+       `mongodb://127.0.0.1:27017` and `redis://127.0.0.1` — matches.
+4. [x] Done 2026-11-25: `./lila.sh compile` → **`[success] elapsed time: 98 s`**, 0 errors (the disk cache made it
+       fast; the wiki's `ui/build` step is stale — the UI now lives in the pnpm workspace and needs no extra step to
+       *compile*). `corepack pnpm install` → green in 3 s with the pinned pnpm 12.9.0. `./lila.sh scalafmtAll` → success
+       in 7 s, 100% cache, **no file changed** (master is formatted per its own `.scalafmt.conf`; our future diff will
+       contain only our changes).
+       Note for all later sessions: build commands need `. ~/.zprofile &&` first (see step 1), and git commands in the
+       clone need the LFS bypass until git-lfs is installed (see step 2).
+
+Environment summary at the end of the setup session (2026-11-25): **compile is green**, services are up via
+`~/priv/dev/lila-dev-services/start`, the branch `study-member-api` is checked out and untouched. Ready for
+implementation (steps 5 to 8).
 
 ### Implementation (next sessions)
 
