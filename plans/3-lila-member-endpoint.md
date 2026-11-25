@@ -87,10 +87,38 @@ is checked out and untouched, everything above is verified. The docker services 
 server (not needed for `compile`). **Next session: start at step 5** (implement the endpoint), remembering
 `. ~/.zprofile &&` before java/sbt commands (node/pnpm need nothing, nvm default is current).
 
-### Implementation (next sessions)
+### Implementation
 
-5. [ ] Route + action `apiListMember` as described above; keep the diff small (no owner/visibility fields in the first
-       PR, that is `JsonView.metadata` as is — extra fields stay a follow-up wish on the issue).
+5. [~] Code written, **12 added lines in 3 files**, compiles green (11 s incremental), scalafmt clean:
+   * `conf/routes`: `GET /api/study/member controllers.Study.apiListMember` (directly after the `by/:user` line)
+   * `modules/study/src/main/StudyRepo.scala`, after `sourceByMember`:
+
+     ```scala
+     def sourceContributed(memberId: UserId): Source[Study, ?] =
+       sourceByMember(memberId, isMe = true, select = bdoc("ownerId".neq(memberId)))
+     ```
+
+   * `app/controllers/Study.scala`, after `apiListByOwner`:
+
+     ```scala
+     def apiListMember = Scoped(_.Study.Read) { ctx ?=> me ?=>
+       apiC.jsonDownload:
+         env.study.studyRepo
+           .sourceContributed(me.userId)
+           .throttle(50, 1.second)
+           .map(lila.study.JsonView.metadata(_, getBool("topics")))
+     }
+     ```
+
+   Idioms copied from `RelayRound.apiMyRounds` (Scoped + given `Me`) and `StudyPager.mineMember` (the `ownerId != me`
+   predicate). Kept minimal: NDJSON `JsonView.metadata` as is, no extra fields (owner/visibility stay a follow-up wish
+   on the issue).
+   **Design decision from live comparison (2026-11-25):** the first version used plain `sourceByMember` and returned
+   owned studies too (user A saw 3 studies); the website tab "Studies I contribute to" shows only the foreign ones
+   (2 studies). ornicar said "mirrors Studies I contribute to" → owned are **excluded**, hence `sourceContributed`.
+   The edge case "user with only own studies" returns HTTP 200 with zero lines — correct.
+   **Not committed in the lila clone yet** — after the re-test of step 6, commit on `study-member-api` with a message
+   like "Add GET /api/study/member (lichess-org/lila#22625)".
 6. [ ] Manual test on the local server: two users, a private study where user B is member of a study of user A, PAT from
        `/account/token`, `curl -H "Authorization: Bearer ..." http://127.0.0.1:9663/api/study/member` as B (must see the
        study) and check the answer without a token is 401.
@@ -122,5 +150,16 @@ server (not needed for `compile`). **Next session: start at step 5** (implement 
   `target/universal/stage/bin/lila-ws`).
 * **Browser URL:** must be `http://localhost:9663`, not `127.0.0.1:9663` — lila's `net.socket.domains` is
   `localhost:9664` and lila-ws's CSRF origin is `http://localhost:9663`; the host must match for cookies and socket.
-* First local data (owner session): two users registered via signup, studies created in the UI. Signup works on the dev
-  instance without special config.
+* First local data (owner session): four local test users registered via signup (works on the dev instance without
+  special config), named in these notes only as **A**, **B** and **C**; 3 studies, **all `visibility: "unlisted"`**:
+  S1 (owned by A, member B), S2 (owned by B, member A), S3 (owned by C, member A). Users live in the Mongo collection
+  `user4`, note `uids` always contains the owner. Good test matrix: A owns 1 study and is a member of 2 foreign ones.
+* **API playground**: `experiments/lila-api.sh` in this repo — curl wrapper with `list|member|pgn|whoami|raw`, flag `-l`
+  selects the local server. Tokens kept apart on purpose: `LICHESS_PAT` = prod, `LICHESS_LOCAL_PAT` = local; a call
+  prints only `token: set/none`, never the value. Tokens are created in the UI at `/account/token`.
+* Reproduced on the local server (2026-11-25): `GET /api/study/by/A` **without** token → 200 + **empty** (A's one
+  study is unlisted, and non-owners only ever see public ones); **with** A's token → the study appears (own studies
+  include unlisted/private — the documented part). `GET /api/study/member` on **prod** → 404 (endpoint does not exist
+  there today — the ticket's gap in one call).
+* Play dev mode did **not** pick up the new route/ controller while running — a server restart loads it (`compile`
+  from a second shell is not enough).
