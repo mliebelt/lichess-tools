@@ -60,8 +60,11 @@ mongod and redis were missing.
        master). Branch `study-member-api` from master (47948db658). Remotes: `origin` = fork, `upstream` =
        `https://github.com/lichess-org/lila` with **push URL DISABLED**. Hooks active: `core.hooksPath=bin/git-hooks`
        (the lila `add-hooks` equivalent; its `pre-commit` runs `pnpm exec lint-staged` on staged files, a no-op for our
-       Scala-only diff). lila pins `pnpm@12.9.0` (system pnpm is 11.3.0, and `corepack enable` was not run) — run pnpm
-       via `corepack pnpm …`.
+       Scala-only diff). lila pins `pnpm@12.9.0`: **solved** — after the node upgrade below, `corepack enable` was run
+       on the default node, so bare `pnpm` in the clone resolves to the pinned 12.9.0 automatically.
+       **Node update 2026-11-25:** `ui/build` needs node >= 24.20.0 (from `.node-version`; installed was nvm's
+       24.16.0). Fixed with the owner's own tool: `nvm install 24` → **v24.22.3**, `nvm alias default 24`. In
+       **already open** terminals run `nvm use default` first; new terminals get it automatically.
        **git-lfs:** the LFS filter problem is **solved** — owner installed `git-lfs 3.8.1` via pacman on 2026-11-25;
        plain `git status` in the clone is exit 0 and clean. The LFS image files are still **pointer stubs** in the
        working tree (fine for Scala/API work); run `git lfs pull` only if the real images are ever wanted.
@@ -82,7 +85,7 @@ Environment summary at the end of the setup session (2026-11-25): **compile is g
 is checked out and untouched, everything above is verified. The docker services were **stopped** at session end
 (`~/priv/dev/lila-dev-services/stop`) — start them again with `~/priv/dev/lila-dev-services/start` before running the
 server (not needed for `compile`). **Next session: start at step 5** (implement the endpoint), remembering
-`. ~/.zprofile &&` before build commands and `corepack pnpm` for pnpm.
+`. ~/.zprofile &&` before java/sbt commands (node/pnpm need nothing, nvm default is current).
 
 ### Implementation (next sessions)
 
