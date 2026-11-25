@@ -117,7 +117,9 @@ server (not needed for `compile`). **Next session: start at step 5** (implement 
   the UI then shows a permanent red "Reconnecting" and study **share/member management does not work** (it runs over the
   socket). Topology: `lila <-> redis <-> lila-ws <-> websocket <-> browser`. Setup: cloned `lichess-org/lila-ws` to
   `~/priv/dev/lila-ws`; its defaults already fit (ports `9664`, `csrf.origin = http://localhost:9663`, localhost
-  redis/mongo). Start: `cd ~/priv/dev/lila-ws && . ~/.zprofile && sbt` then `~reStart`.
+  redis/mongo). **Its README is stale**: it says `~reStart`, but the reStart plugin is gone from `plugins.sbt` →
+  `Invalid commands`. Correct: `cd ~/priv/dev/lila-ws && . ~/.zprofile && sbt` then **`run`** (or `stage` once, then
+  `target/universal/stage/bin/lila-ws`).
 * **Browser URL:** must be `http://localhost:9663`, not `127.0.0.1:9663` — lila's `net.socket.domains` is
   `localhost:9664` and lila-ws's CSRF origin is `http://localhost:9663`; the host must match for cookies and socket.
 * First local data (owner session): two users registered via signup, studies created in the UI. Signup works on the dev
